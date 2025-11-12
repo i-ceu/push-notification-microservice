@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  push-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: push-service
+    ports:
+      - "8084:8084"
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      QUEUE_NAME: push.queue
+      FCMServiceAccountPath: ${FCMServiceAccountPath}
+      PUSH_PROVIDER: fcm
+      SERVER_PORT: :8084
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+    networks:
+      - notification-network
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - notification-network
+
+volumes:
+  rabbitmq_data:
+
+networks:
+  notification-network:
+    driver: bridge

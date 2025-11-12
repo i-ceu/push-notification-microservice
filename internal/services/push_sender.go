@@ -1,0 +1,48 @@
+package services
+
+import (
+	"fmt"
+	"push-notification-microservice/internal/config"
+	"push-notification-microservice/internal/models"
+	"time"
+)
+
+type PushSender struct {
+	config         *config.Config
+	fcmSender      *FCMSender
+	circuitBreaker *CircuitBreaker
+}
+
+func NewPushSender(cfg *config.Config) (*PushSender, error) {
+	var fcmSender *FCMSender
+	var err error
+	fmt.Println(cfg.FCMServiceAccountPath)
+
+	// Initialize FCM sender if configured
+	if cfg.FCMServiceAccountPath != "" {
+		fcmSender, err = NewFCMSender(cfg.FCMServiceAccountPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize FCM sender: %w", err)
+		}
+	}
+
+	return &PushSender{
+		config:         cfg,
+		fcmSender:      fcmSender,
+		circuitBreaker: NewCircuitBreaker(5, 30*time.Second),
+	}, nil
+}
+
+func (ps *PushSender) Send(notification *models.PushNotification) error {
+	return ps.circuitBreaker.Call(func() error {
+		switch ps.config.PushProvider {
+		case "fcm":
+			if ps.fcmSender == nil {
+				return fmt.Errorf("FCM sender not configured")
+			}
+			return ps.fcmSender.Send(notification)
+		default:
+			return fmt.Errorf("unknown push provider: %s", ps.config.PushProvider)
+		}
+	})
+}
