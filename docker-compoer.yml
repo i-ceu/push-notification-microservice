@@ -9,7 +9,7 @@ services:
     ports:
       - "8084:8084"
     environment:
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      RABBITMQ_URL: ${RABBITMQ_URL}
       QUEUE_NAME: push.queue
       FCMServiceAccountPath: ${FCMServiceAccountPath}
       PUSH_PROVIDER: fcm
