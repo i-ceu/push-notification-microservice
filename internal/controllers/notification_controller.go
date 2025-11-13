@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"push-notification-microservice/internal/models"
 	"push-notification-microservice/internal/requests"
@@ -54,7 +53,6 @@ func (h *PushController) SendPush(c *gin.Context) {
 		CreatedAt:       time.Now(),
 	}
 
-	fmt.Println(*notification)
 	err := h.pushSender.Send(notification)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, Response{
