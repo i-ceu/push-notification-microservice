@@ -55,7 +55,6 @@ func Initialize(cfg *config.Config) *http.Server {
 		push := api.Group("/push")
 		{
 			push.POST("/send", notificationHandler.SendPush)
-			push.POST("/send-batch", notificationHandler.SendBatchPush)
 		}
 	}
 

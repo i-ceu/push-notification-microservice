@@ -8,7 +8,6 @@ import (
 
 	"push-notification-microservice/internal/models"
 
-	"push-notification-microservice/internal/helpers"
 	"push-notification-microservice/internal/services"
 	"time"
 
@@ -20,7 +19,6 @@ type Consumer struct {
 	channel    *amqp.Channel
 	queue      amqp.Queue
 	pushSender *services.PushSender
-	renderer   *helpers.TemplateRenderer
 	maxRetries int
 }
 
@@ -57,7 +55,6 @@ func NewConsumer(cfg *config.Config, pushSender *services.PushSender) (*Consumer
 		channel:    channel,
 		queue:      queue,
 		pushSender: pushSender,
-		renderer:   helpers.NewTemplateRenderer(),
 		maxRetries: 3,
 	}, nil
 }
@@ -103,25 +100,6 @@ func (c *Consumer) processMessage(msg amqp.Delivery) {
 		msg.Ack(false)
 		return
 	}
-
-	// Render template with variables
-	renderedTitle, err := c.renderer.Render(notification.Title, notification.Variables)
-	if err != nil {
-		log.Printf("[%s] Title rendering failed: %v", notification.CorrelationID, err)
-		msg.Ack(false)
-		return
-	}
-
-	renderedBody, err := c.renderer.Render(notification.Body, notification.Variables)
-	if err != nil {
-		log.Printf("[%s] Body rendering failed: %v", notification.CorrelationID, err)
-		msg.Ack(false)
-		return
-	}
-
-	// Update notification with rendered content
-	notification.Title = renderedTitle
-	notification.Body = renderedBody
 
 	// Send push notification
 	err = c.pushSender.Send(&notification)

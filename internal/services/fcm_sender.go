@@ -57,7 +57,7 @@ func (fs *FCMSender) Send(notification *models.PushNotification) error {
 	ctx := context.Background()
 
 	// Get access token
-	token, err := fs.getAccessToken(ctx)
+	token, err := fs.getAccessToken()
 	if err != nil {
 		return fmt.Errorf("failed to get access token: %w", err)
 	}
@@ -98,7 +98,7 @@ func (fs *FCMSender) Send(notification *models.PushNotification) error {
 	return nil
 }
 
-func (fs *FCMSender) getAccessToken(ctx context.Context) (string, error) {
+func (fs *FCMSender) getAccessToken() (string, error) {
 	token, err := fs.tokenSource.Token()
 	if err != nil {
 		return "", fmt.Errorf("failed to get token: %w", err)
@@ -111,46 +111,13 @@ func (fs *FCMSender) getAccessToken(ctx context.Context) (string, error) {
 	return token.AccessToken, nil
 }
 
-// buildMessage creates the FCM message payload in a type-safe way
 func (fs *FCMSender) buildMessage(notification *models.PushNotification) map[string]interface{} {
-	// Base message structure
 	message := map[string]interface{}{
 		"message": map[string]interface{}{
 			"token": notification.PushToken,
 			"notification": map[string]interface{}{
-				"title": notification.Title,
-				"body":  notification.Body,
-			},
-		},
-	}
-
-	// Add image if provided
-	if notification.ImageURL != "" {
-		message["message"].(map[string]interface{})["notification"].(map[string]interface{})["image"] = notification.ImageURL
-	}
-
-	// Add data payload if provided
-	if notification.Data != nil {
-		message["message"].(map[string]interface{})["data"] = notification.Data
-	}
-
-	// Add Android-specific configuration
-	message["message"].(map[string]interface{})["android"] = map[string]interface{}{
-		"priority": "high",
-	}
-
-	// Add APNS-specific configuration for iOS
-	message["message"].(map[string]interface{})["apns"] = map[string]interface{}{
-		"headers": map[string]interface{}{
-			"apns-priority": "10",
-		},
-		"payload": map[string]interface{}{
-			"aps": map[string]interface{}{
-				"alert": map[string]interface{}{
-					"title": notification.Title,
-					"body":  notification.Body,
-				},
-				"sound": "default",
+				"title": notification.Data.Title,
+				"body":  notification.Data.Body,
 			},
 		},
 	}
@@ -158,7 +125,6 @@ func (fs *FCMSender) buildMessage(notification *models.PushNotification) map[str
 	return message
 }
 
-// SendToMultiple sends notifications to multiple devices
 func (fs *FCMSender) SendToMultiple(notifications []*models.PushNotification) []error {
 	var errors []error
 
