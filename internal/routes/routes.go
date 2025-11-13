@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"push-notification-microservice/internal/config"
 	"push-notification-microservice/internal/controllers"
-	"push-notification-microservice/internal/helpers"
 	"push-notification-microservice/internal/queue"
 	"push-notification-microservice/internal/services"
 	"time"
@@ -15,10 +14,10 @@ import (
 )
 
 func Initialize(cfg *config.Config) *http.Server {
-	logFile := helpers.SetupLogging()
-	defer logFile.Close()
+	// logFile := helpers.SetupLogging()
+	// defer logFile.Close()
 
-	gin.DefaultWriter = logFile
+	// gin.DefaultWriter = logFile
 
 	pushSender, err := services.NewPushSender(cfg)
 	if err != nil {
