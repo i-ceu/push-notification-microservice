@@ -11,7 +11,8 @@ services:
     environment:
       RABBITMQ_URL: ${RABBITMQ_URL}
       QUEUE_NAME: push.queue
-      FCMServiceAccountPath: ${FCMServiceAccountPath}
+      FCM_SERVICE_ACCOUNT: ${FCM_SERVICE_ACCOUNT}
+      FCM_SERVICE_ACCOUNT_BASE64: ${FCM_SERVICE_ACCOUNT_BASE64}
       PUSH_PROVIDER: fcm
       SERVER_PORT: :8084
     depends_on:

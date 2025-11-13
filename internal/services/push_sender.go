@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"log"
 	"push-notification-microservice/internal/config"
 	"push-notification-microservice/internal/models"
 	"time"
@@ -14,21 +15,28 @@ type PushSender struct {
 }
 
 func NewPushSender(cfg *config.Config) (*PushSender, error) {
-	var fcmSender *FCMSender
-	var err error
-	fmt.Println(cfg.FCMServiceAccountPath)
-
+	ps := &PushSender{
+		config:         cfg,
+		circuitBreaker: NewCircuitBreaker(5, 30*time.Second),
+	}
 	// Initialize FCM sender if configured
-	if cfg.FCMServiceAccountPath != "" {
-		fcmSender, err = NewFCMSender(cfg.FCMServiceAccountPath)
+	credPath, err := config.GetFirebaseCredentials()
+	if err == nil && credPath != "" {
+		log.Printf("🔐 Initializing FCM with credentials")
+
+		serviceAccountSender, err := NewFCMSender(credPath)
 		if err != nil {
-			return nil, fmt.Errorf("failed to initialize FCM sender: %w", err)
+			return nil, fmt.Errorf("failed to initialize FCM: %w", err)
 		}
+
+		ps.fcmSender = serviceAccountSender
+		log.Println("✅ FCM initialized successfully")
+		return ps, nil
 	}
 
 	return &PushSender{
 		config:         cfg,
-		fcmSender:      fcmSender,
+		fcmSender:      ps.fcmSender,
 		circuitBreaker: NewCircuitBreaker(5, 30*time.Second),
 	}, nil
 }

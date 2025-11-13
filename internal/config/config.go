@@ -8,11 +8,11 @@ import (
 )
 
 type Config struct {
-	RabbitMQURL           string
-	QueueName             string
-	FCMServiceAccountPath string
-	PushProvider          string
-	Port                  string
+	RabbitMQURL         string
+	QueueName           string
+	FCM_SERVICE_ACCOUNT string
+	PushProvider        string
+	Port                string
 }
 
 func Load() *Config {
@@ -23,11 +23,11 @@ func Load() *Config {
 	}
 
 	return &Config{
-		RabbitMQURL:           getEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/"),
-		QueueName:             getEnv("QUEUE_NAME", "push.queue"),
-		FCMServiceAccountPath: getEnv("FCMServiceAccountPath", ""),
-		PushProvider:          getEnv("PUSH_PROVIDER", "fcm"),
-		Port:                  getEnv("SERVER_PORT", ":8084"),
+		RabbitMQURL:         getEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/"),
+		QueueName:           getEnv("QUEUE_NAME", "push.queue"),
+		FCM_SERVICE_ACCOUNT: getEnv("FCM_SERVICE_ACCOUNT", ""),
+		PushProvider:        getEnv("PUSH_PROVIDER", "fcm"),
+		Port:                getEnv("SERVER_PORT", ":8084"),
 	}
 }
 
