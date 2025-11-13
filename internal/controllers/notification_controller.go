@@ -46,11 +46,11 @@ func (h *PushController) SendPush(c *gin.Context) {
 	}
 
 	notification := &models.PushNotification{
-		CorrelationID:  correlationID,
-		NotificationID: notificationID,
-		PushToken:      req.PushToken,
-		Data:           req.Data,
-		CreatedAt:      time.Now(),
+		CorrelationID:   correlationID,
+		NotificationID:  notificationID,
+		PushToken:       req.PushToken,
+		RenderedContent: req.RenderedContent,
+		CreatedAt:       time.Now(),
 	}
 
 	err := h.pushSender.Send(notification)

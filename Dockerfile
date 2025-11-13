@@ -17,7 +17,7 @@ RUN go mod download
 COPY . .
 
 # Build the application from cmd/api directory
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/api
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/server
 
 # Final stage - minimal image
 FROM alpine:latest
@@ -29,9 +29,6 @@ WORKDIR /root/
 
 # Copy the binary from builder stage
 COPY --from=builder /app/main .
-
-# Copy .env file if you're using one (optional)
-COPY --from=builder /app/cmd/api/query-method.md ./
 
 # Expose port (adjust to your service port)
 EXPOSE 8080

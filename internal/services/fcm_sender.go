@@ -65,7 +65,6 @@ func (fs *FCMSender) Send(notification *models.PushNotification) error {
 	// FCM v1 API endpoint
 	url := fmt.Sprintf("https://fcm.googleapis.com/v1/projects/%s/messages:send", fs.projectID)
 
-	// Create message payload - using type-safe approach
 	message := fs.buildMessage(notification)
 
 	jsonData, err := json.Marshal(message)
@@ -116,8 +115,8 @@ func (fs *FCMSender) buildMessage(notification *models.PushNotification) map[str
 		"message": map[string]interface{}{
 			"token": notification.PushToken,
 			"notification": map[string]interface{}{
-				"title": notification.Data.Title,
-				"body":  notification.Data.Body,
+				"title": notification.RenderedContent.Title,
+				"body":  notification.RenderedContent.Body,
 			},
 		},
 	}

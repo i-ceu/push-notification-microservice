@@ -19,10 +19,10 @@ type UserData struct {
 }
 
 type SendPushNotificationRequest struct {
-	PushToken string             `json:"push_token" binding:"required"`
-	Title     string             `json:"title" binding:"required"`
-	Body      string             `json:"body" binding:"required"`
-	ImageURL  string             `json:"image_url,omitempty"`
-	ClickURL  string             `json:"click_url,omitempty"`
-	Data      models.MessageData `json:"data,omitempty"`
+	PushToken       string                 `json:"push_token" binding:"required"`
+	Title           string                 `json:"title" binding:"required"`
+	Body            string                 `json:"body" binding:"required"`
+	ImageURL        string                 `json:"image_url,omitempty"`
+	ClickURL        string                 `json:"click_url,omitempty"`
+	RenderedContent models.RenderedContent `json:"data,omitempty"`
 }
