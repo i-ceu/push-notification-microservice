@@ -19,10 +19,9 @@ func NewPushSender(cfg *config.Config) (*PushSender, error) {
 		config:         cfg,
 		circuitBreaker: NewCircuitBreaker(5, 30*time.Second),
 	}
-	// Initialize FCM sender if configured
 	credPath, err := config.GetFirebaseCredentials()
 	if err == nil && credPath != "" {
-		log.Printf("🔐 Initializing FCM with credentials")
+		log.Printf("Initializing FCM with credentials")
 
 		serviceAccountSender, err := NewFCMSender(credPath)
 		if err != nil {
@@ -30,7 +29,6 @@ func NewPushSender(cfg *config.Config) (*PushSender, error) {
 		}
 
 		ps.fcmSender = serviceAccountSender
-		log.Println("✅ FCM initialized successfully")
 		return ps, nil
 	}
 

@@ -2,6 +2,7 @@ package queue
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"push-notification-microservice/internal/config"
@@ -25,20 +26,19 @@ type Consumer struct {
 func NewConsumer(cfg *config.Config, pushSender *services.PushSender) (*Consumer, error) {
 	conn, err := amqp.Dial(cfg.RabbitMQURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("dial failed: %w", err)
 	}
 
-	channel, err := conn.Channel()
+	ch, err := conn.Channel()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("channel failed: %w", err)
 	}
 
-	err = channel.Qos(1, 0, false)
-	if err != nil {
-		return nil, err
+	if err := ch.Qos(1, 0, false); err != nil {
+		return nil, fmt.Errorf("qos failed: %w", err)
 	}
 
-	queue, err := channel.QueueDeclare(
+	q, err := ch.QueueDeclarePassive(
 		cfg.QueueName,
 		true,  // durable
 		false, // delete when unused
@@ -47,40 +47,44 @@ func NewConsumer(cfg *config.Config, pushSender *services.PushSender) (*Consumer
 		nil,   // arguments
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("queue declare failed: %w", err)
 	}
 
 	return &Consumer{
 		conn:       conn,
-		channel:    channel,
-		queue:      queue,
+		channel:    ch,
+		queue:      q,
 		pushSender: pushSender,
 		maxRetries: 3,
 	}, nil
 }
 
 func (c *Consumer) Start() {
+	consumertag := fmt.Sprintf("consumer-%d", time.Now().Unix())
+
 	msgs, err := c.channel.Consume(
 		c.queue.Name,
-		"",    // consumer
-		false, // auto-ack (we'll manually ack)
-		false, // exclusive
-		false, // no-local
-		false, // no-wait
-		nil,   // args
+		consumertag, // consumer tag
+		false,       // auto-ack
+		false,       // exclusive
+		false,       // no-local
+		false,       // no-wait
+		nil,         // args
 	)
 	if err != nil {
-		log.Fatalf("Failed to register consumer: %v", err)
+		log.Fatalf("Consume failed: %v", err)
 	}
 
-	log.Println("Push service started. Waiting for messages...")
+	log.Printf("Consumer started: %s", consumertag)
 
+	fmt.Println(len(msgs))
 	for msg := range msgs {
 		c.processMessage(msg)
 	}
 }
 
 func (c *Consumer) processMessage(msg amqp.Delivery) {
+
 	var notification models.PushNotification
 	err := json.Unmarshal(msg.Body, &notification)
 	if err != nil {
@@ -94,22 +98,20 @@ func (c *Consumer) processMessage(msg amqp.Delivery) {
 		notification.PushToken[:min(10, len(notification.PushToken))]+"...",
 		notification.RetryCount+1)
 
-	// Validate push token
 	if notification.PushToken == "" {
 		log.Printf("[%s] Invalid push token - skipping", notification.CorrelationID)
 		msg.Ack(false)
 		return
 	}
 
-	// Send push notification
 	err = c.pushSender.Send(&notification)
 	if err != nil {
-		log.Printf("[%s] Push notification sending failed: %v", notification.CorrelationID, err)
+		log.Printf("Push notification sending failed: %v", err)
 		c.handleFailure(msg, notification)
 		return
 	}
 
-	log.Printf("[%s] Push notification sent successfully", notification.CorrelationID)
+	log.Printf("Push notification sent successfully")
 	msg.Ack(false)
 }
 
@@ -123,11 +125,9 @@ func (c *Consumer) handleFailure(msg amqp.Delivery, notification models.PushNoti
 		return
 	}
 
-	// Calculate exponential backoff delay
 	delay := time.Duration(1<<uint(notification.RetryCount)) * time.Second
 	log.Printf("[%s] Retrying after %v", notification.CorrelationID, delay)
 
-	// Requeue with delay
 	time.Sleep(delay)
 	msg.Nack(false, true)
 }

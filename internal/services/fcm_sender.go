@@ -23,7 +23,6 @@ type FCMSender struct {
 }
 
 func NewFCMSender(serviceAccountPath string) (*FCMSender, error) {
-	// Read service account file
 	jsonKey, err := os.ReadFile(serviceAccountPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read service account: %w", err)
@@ -36,7 +35,6 @@ func NewFCMSender(serviceAccountPath string) (*FCMSender, error) {
 		return nil, fmt.Errorf("failed to parse service account: %w", err)
 	}
 
-	// Create credentials and token source
 	creds, err := google.CredentialsFromJSON(
 		context.Background(),
 		jsonKey,
@@ -56,13 +54,11 @@ func NewFCMSender(serviceAccountPath string) (*FCMSender, error) {
 func (fs *FCMSender) Send(notification *models.PushNotification) error {
 	ctx := context.Background()
 
-	// Get access token
 	token, err := fs.getAccessToken()
 	if err != nil {
 		return fmt.Errorf("failed to get access token: %w", err)
 	}
 
-	// FCM v1 API endpoint
 	url := fmt.Sprintf("https://fcm.googleapis.com/v1/projects/%s/messages:send", fs.projectID)
 
 	message := fs.buildMessage(notification)
@@ -72,7 +68,6 @@ func (fs *FCMSender) Send(notification *models.PushNotification) error {
 		return fmt.Errorf("failed to marshal message: %w", err)
 	}
 
-	// Send request
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)

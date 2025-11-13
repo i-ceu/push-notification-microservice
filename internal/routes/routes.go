@@ -30,7 +30,6 @@ func Initialize(cfg *config.Config) *http.Server {
 	}
 	defer consumer.Close()
 
-	// Start consuming messages from queue
 	go consumer.Start()
 
 	router := gin.Default()
