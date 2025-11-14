@@ -34,5 +34,4 @@ go.work.sum
 #
 .logs/
 *.log
-fcm_access_key.json
-firebase_base64.txt
+firebase-credentials.json
