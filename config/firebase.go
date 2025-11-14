@@ -22,7 +22,6 @@ func GetFirebaseCredentials() (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("failed to write credentials file: %w", err)
 		}
-		fmt.Println("Firebase credentials written to:", tmpFile)
 		return tmpFile, nil
 	}
 
