@@ -17,8 +17,7 @@ RUN go mod download
 COPY . .
 
 # Build the application from cmd/api directory
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/server
-
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 # Final stage - minimal image
 FROM alpine:latest
 
