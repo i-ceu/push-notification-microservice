@@ -34,7 +34,6 @@ func NewFCMSender(serviceAccountPath string) (*FCMSender, error) {
 		return nil, fmt.Errorf("failed to parse service account: %w", err)
 	}
 
-	fmt.Println(jsonKey)
 	creds, err := google.CredentialsFromJSON(
 		context.Background(),
 		jsonKey,

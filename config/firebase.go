@@ -17,11 +17,8 @@ func GetFirebaseCredentials() (string, error) {
 		}
 
 		tmpFile := "tmp/firebase-credentials.json"
-		fmt.Println(string(decoded))
-
 		os.MkdirAll("tmp", 0755)
 		err = os.WriteFile(tmpFile, decoded, 0600)
-		fmt.Println("written file error:", err)
 		if err != nil {
 			return "", fmt.Errorf("failed to write credentials file: %w", err)
 		}
